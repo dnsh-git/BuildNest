@@ -1,15 +1,9 @@
-console.log({
-    PUBLIC: process.env.IMAGEKIT_PUBLIC_KEY,
-    PRIVATE: process.env.IMAGEKIT_PRIVATE_KEY,
-    URL: process.env.IMAGEKIT_URL_ENDPOINT,
-});
 const Product = require("../models/product.model");
 const imagekit = require("../config/imagekit");
 const ApiError = require("../utils/ApiError");
 
 // Create Product
 const createProduct = async (productData, file) => {
-    // Check duplicate product
     const existingProduct = await Product.findOne({
         name: productData.name,
         brand: productData.brand,
@@ -22,14 +16,12 @@ const createProduct = async (productData, file) => {
         );
     }
 
-    // Default image object
     let image = {
         url: "",
         fileId: "",
         name: "",
     };
 
-    // Upload image to ImageKit
     if (file) {
         const uploadedImage = await imagekit.upload({
             file: file.buffer,
@@ -44,7 +36,6 @@ const createProduct = async (productData, file) => {
         };
     }
 
-    // Create product
     const product = await Product.create({
         ...productData,
         image,
@@ -68,9 +59,6 @@ const getAllProducts = async (query) => {
 
     const filter = {};
 
-    // ==========================
-    // Search Filter
-    // ==========================
     if (search) {
         filter.$or = [
             { name: { $regex: search, $options: "i" } },
@@ -79,16 +67,10 @@ const getAllProducts = async (query) => {
         ];
     }
 
-    // ==========================
-    // Category Filter
-    // ==========================
     if (category) {
         filter.category = category;
     }
 
-    // ==========================
-    // Brand Filter
-    // ==========================
     if (brand) {
         filter.brand = {
             $regex: `^${brand}$`,
@@ -96,9 +78,6 @@ const getAllProducts = async (query) => {
         };
     }
 
-    // ==========================
-    // Price Filter
-    // ==========================
     if (minPrice || maxPrice) {
         filter.price = {};
 
@@ -111,17 +90,10 @@ const getAllProducts = async (query) => {
         }
     }
 
-    // ==========================
-    // Sorting
-    // ==========================
     const sortOption = sort || "-createdAt";
 
-    // ==========================
-    // Pagination
-    // ==========================
     const currentPage = Number(page);
     const pageLimit = Number(limit);
-
     const skip = (currentPage - 1) * pageLimit;
 
     const totalProducts = await Product.countDocuments(filter);
@@ -144,47 +116,52 @@ const getAllProducts = async (query) => {
 
 // Get Product By ID
 const getProductById = async (id) => {
-  const product = await Product.findById(id);
+    const product = await Product.findById(id);
 
-  if (!product) {
-    throw new ApiError(404, "Product not found");
-  }
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
 
-  return product;
+    return product;
 };
 
 // Update Product
 const updateProduct = async (id, productData) => {
-  const product = await Product.findById(id);
+    const product = await Product.findById(id);
 
-  if (!product) {
-    throw new ApiError(404, "Product not found");
-  }
-
-  // Prevent duplicate name + brand
-  const duplicate = await Product.findOne({
-    _id: { $ne: id },
-    name: productData.name,
-    brand: productData.brand,
-  });
-
-  if (duplicate) {
-    throw new ApiError(
-      409,
-      "Another product already exists with the same name and brand."
-    );
-  }
-
-  const updatedProduct = await Product.findByIdAndUpdate(
-    id,
-    productData,
-    {
-      new: true,
-      runValidators: true,
+    if (!product) {
+        throw new ApiError(404, "Product not found");
     }
-  );
 
-  return updatedProduct;
+    // Check for duplicate product name and brand when supplied
+    if (productData.name || productData.brand) {
+        const duplicateName = productData.name || product.name;
+        const duplicateBrand = productData.brand || product.brand;
+
+        const duplicate = await Product.findOne({
+            _id: { $ne: id },
+            name: duplicateName,
+            brand: duplicateBrand,
+        });
+
+        if (duplicate) {
+            throw new ApiError(
+                409,
+                "Another product already exists with the same name and brand."
+            );
+        }
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+        id,
+        productData,
+        {
+            new: true,
+            runValidators: true,
+        }
+    );
+
+    return updatedProduct;
 };
 
 // Delete Product
@@ -196,8 +173,6 @@ const deleteProduct = async (id) => {
     }
 
     await product.deleteOne();
-
-    return;
 };
 
 module.exports = {
