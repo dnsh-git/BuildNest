@@ -1,6 +1,23 @@
 
 const { body, param } = require("express-validator");
 
+const quantityValidator = (field) => [
+    field
+        .isInt()
+        .withMessage("Quantity must be a whole number")
+        .bail()
+        .custom((value) => {
+            if (Number(value) < 0) {
+                throw new Error("Quantity cannot be negative");
+            }
+
+            return true;
+        })
+        .bail()
+        .isInt({ min: 1 })
+        .withMessage("Quantity must be at least 1"),
+];
+
 const addToCartValidator = [
     body("productId")
         .notEmpty()
@@ -11,8 +28,21 @@ const addToCartValidator = [
 
     body("quantity")
         .optional()
-        .isInt()
-        .withMessage("Quantity must be a whole number")
+        .custom((value) => {
+            if (!Number.isInteger(Number(value))) {
+                throw new Error("Quantity must be a whole number");
+            }
+
+            return true;
+        })
+        .bail()
+        .custom((value) => {
+            if (Number(value) < 0) {
+                throw new Error("Quantity cannot be negative");
+            }
+
+            return true;
+        })
         .bail()
         .isInt({ min: 1 })
         .withMessage("Quantity must be at least 1"),
@@ -27,8 +57,21 @@ const updateCartValidator = [
         .notEmpty()
         .withMessage("Quantity is required")
         .bail()
-        .isInt()
-        .withMessage("Quantity must be a whole number")
+        .custom((value) => {
+            if (!Number.isInteger(Number(value))) {
+                throw new Error("Quantity must be a whole number");
+            }
+
+            return true;
+        })
+        .bail()
+        .custom((value) => {
+            if (Number(value) < 0) {
+                throw new Error("Quantity cannot be negative");
+            }
+
+            return true;
+        })
         .bail()
         .isInt({ min: 1 })
         .withMessage("Quantity must be at least 1"),
