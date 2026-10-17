@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router();
 
@@ -7,6 +8,8 @@ const upload = require("../middleware/upload.middleware");
 
 const {
     createProductValidator,
+    updateProductValidator,
+    productIdValidator,
 } = require("../validators/product.validator");
 
 const {
@@ -21,13 +24,21 @@ const {
 // Public Routes
 // =====================
 
+// GET /api/products
 router.get("/", getAllProducts);
-router.get("/:id", getProductById);
+
+// GET /api/products/:id
+router.get(
+    "/:id",
+    validate(productIdValidator),
+    getProductById
+);
 
 // =====================
 // Admin Routes
 // =====================
 
+// POST /api/products
 router.post(
     "/",
     protect,
@@ -37,17 +48,22 @@ router.post(
     createProduct
 );
 
+// PUT /api/products/:id
 router.put(
     "/:id",
     protect,
     admin,
+    validate(productIdValidator),
+    validate(updateProductValidator),
     updateProduct
 );
 
+// DELETE /api/products/:id
 router.delete(
     "/:id",
     protect,
     admin,
+    validate(productIdValidator),
     deleteProduct
 );
 

@@ -1,7 +1,13 @@
 
 const { validationResult } = require("express-validator");
 
-const validate = (validations) => {
+const validate = (validations = []) => {
+    if (!Array.isArray(validations)) {
+        throw new TypeError(
+            "validate() expects an array of express-validator checks."
+        );
+    }
+
     return [
         ...validations,
 
