@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const router = express.Router();
@@ -22,6 +23,7 @@ const {
 // User Routes
 // =====================
 
+// POST /api/orders
 router.post(
     "/",
     protect,
@@ -29,12 +31,14 @@ router.post(
     placeOrder
 );
 
+// GET /api/orders
 router.get(
     "/",
     protect,
     getMyOrders
 );
 
+// GET /api/orders/:orderId
 router.get(
     "/:orderId",
     protect,
@@ -46,6 +50,7 @@ router.get(
 // Admin Route
 // =====================
 
+// PATCH /api/orders/:orderId/status
 router.patch(
     "/:orderId/status",
     protect,
