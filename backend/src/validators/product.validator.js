@@ -1,5 +1,5 @@
 
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 
 // Validate product creation
 const createProductValidator = [
@@ -100,8 +100,68 @@ const productIdValidator = [
         .withMessage("Invalid product ID"),
 ];
 
+// Validate product listing query parameters
+const productQueryValidator = [
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer"),
+
+    query("limit")
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage("Limit must be an integer between 1 and 100"),
+
+    query("minPrice")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Minimum price must be non-negative"),
+
+    query("maxPrice")
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage("Maximum price must be non-negative"),
+
+    query("sort")
+        .optional()
+        .isIn([
+            "price",
+            "-price",
+            "name",
+            "-name",
+            "createdAt",
+            "-createdAt",
+        ])
+        .withMessage("Invalid sort option"),
+
+    query().custom((value, { req }) => {
+        const minPrice =
+            req.query.minPrice === undefined
+                ? undefined
+                : Number(req.query.minPrice);
+
+        const maxPrice =
+            req.query.maxPrice === undefined
+                ? undefined
+                : Number(req.query.maxPrice);
+
+        if (
+            minPrice !== undefined &&
+            maxPrice !== undefined &&
+            minPrice > maxPrice
+        ) {
+            throw new Error(
+                "Minimum price cannot exceed maximum price"
+            );
+        }
+
+        return true;
+    }),
+];
+
 module.exports = {
     createProductValidator,
     updateProductValidator,
     productIdValidator,
+    productQueryValidator,
 };

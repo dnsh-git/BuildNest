@@ -10,6 +10,7 @@ const {
     createProductValidator,
     updateProductValidator,
     productIdValidator,
+    productQueryValidator,
 } = require("../validators/product.validator");
 
 const {
@@ -25,7 +26,11 @@ const {
 // =====================
 
 // GET /api/products
-router.get("/", getAllProducts);
+router.get(
+    "/",
+    validate(productQueryValidator),
+    getAllProducts
+);
 
 // GET /api/products/:id
 router.get(
